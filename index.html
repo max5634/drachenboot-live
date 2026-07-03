@@ -29,7 +29,13 @@
   .dot{width:7px; height:7px; border-radius:50%; background:var(--cyan); box-shadow:0 0 0 0 rgba(55,198,214,.7); animation:pulse 1.8s infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(55,198,214,.65)}70%{box-shadow:0 0 0 8px rgba(55,198,214,0)}100%{box-shadow:0 0 0 0 rgba(55,198,214,0)}}
   .upd{font-size:10.5px; color:#9fc0c7; letter-spacing:.02em}
-  .livebar{display:flex; align-items:center; gap:10px; margin-top:12px}
+  .livebar{display:flex; align-items:center; gap:9px; margin-top:12px; flex-wrap:wrap}
+  .refresh{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.13); border:1px solid rgba(157,230,238,.45); color:#eafafd; font-family:inherit; font-weight:700; font-size:12px; padding:7px 13px; border-radius:999px; cursor:pointer; -webkit-tap-highlight-color:transparent}
+  .refresh:active{background:rgba(255,255,255,.26)}
+  .refresh:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+  .refresh .rico{display:inline-block; font-size:15px; line-height:1}
+  .refresh.spin .rico{animation:rspin .7s linear infinite}
+  @keyframes rspin{to{transform:rotate(360deg)}}
   .wave{position:absolute; left:0; right:0; bottom:-1px; width:100%; height:26px; display:block; z-index:2}
 
   .tabs{position:sticky; top:0; z-index:20; display:flex; gap:4px; padding:8px; background:var(--foam); border-bottom:1px solid var(--line)}
@@ -131,7 +137,7 @@
           <div class="eyebrow">Nordhessische Meisterschaften</div>
           <div class="wordmark">Drachenboot</div>
           <div class="place">Nieder-Werbe am Edersee · 11. Juli</div>
-          <div class="livebar"><span class="live"><span class="dot"></span>LIVE</span><span class="upd" id="upd">lädt …</span></div>
+          <div class="livebar"><span class="live"><span class="dot"></span>LIVE</span><span class="upd" id="upd">lädt …</span><button class="refresh" id="refreshBtn" type="button" aria-label="Neue Zeiten laden"><span class="rico">↻</span>Aktualisieren</button></div>
         </div>
       </div>
       <svg class="wave" viewBox="0 0 440 40" preserveAspectRatio="none" aria-hidden="true">
@@ -352,19 +358,33 @@
     }
   }
 
-  // Tabs
+  // Tabs (merkt sich den zuletzt geöffneten Reiter)
   var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
   var panels = {rang:"p-rang", fin:"p-fin", zeit:"p-zeit"};
-  tabs.forEach(function(t){ t.addEventListener("click", function(){
-    tabs.forEach(function(x){ x.setAttribute("aria-selected", x===t); });
-    Object.keys(panels).forEach(function(k){ $(panels[k]).hidden = (panels[k]!==panels[t.dataset.tab]); });
-  }); });
-  // Klassen-Umschalter
-  Array.prototype.slice.call(document.querySelectorAll("#clsSeg button")).forEach(function(b){
-    b.addEventListener("click", function(){
-      document.querySelectorAll("#clsSeg button").forEach(function(x){ x.setAttribute("aria-selected", x===b); });
-      curCls = b.dataset.cls; renderRang();
-    });
+  function showTab(name){
+    if(!panels[name]) name = "rang";
+    tabs.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.tab===name); });
+    Object.keys(panels).forEach(function(k){ $(panels[k]).hidden = (k!==name); });
+    try{ localStorage.setItem("db_tab", name); }catch(e){}
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ showTab(t.dataset.tab); }); });
+  try{ var _st = localStorage.getItem("db_tab"); if(_st) showTab(_st); }catch(e){}
+  // Klassen-Umschalter (merkt sich die Auswahl)
+  var clsBtns = Array.prototype.slice.call(document.querySelectorAll("#clsSeg button"));
+  function showClass(cls){
+    curCls = cls;
+    clsBtns.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.cls===cls); });
+    try{ localStorage.setItem("db_cls", cls); }catch(e){}
+    renderRang();
+  }
+  clsBtns.forEach(function(b){ b.addEventListener("click", function(){ showClass(b.dataset.cls); }); });
+  try{ var _sc = localStorage.getItem("db_cls"); if(_sc==="10er"||_sc==="20er"){ curCls=_sc; clsBtns.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.cls===_sc); }); } }catch(e){}
+
+  // "Aktualisieren"-Knopf: lädt frische Zeiten, ohne die Seite neu zu laden
+  var rbtn = document.getElementById("refreshBtn");
+  if(rbtn) rbtn.addEventListener("click", function(){
+    rbtn.classList.add("spin");
+    Promise.resolve(load()).finally(function(){ setTimeout(function(){ rbtn.classList.remove("spin"); }, 500); });
   });
 
   load();

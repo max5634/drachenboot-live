@@ -326,7 +326,11 @@
       return;
     }
     try{
-      var res = await Promise.all([ fetch(CONFIG.vorrundeCsv), fetch(CONFIG.finaleCsv) ]);
+      var bust = "&_=" + Date.now();
+      var res = await Promise.all([
+        fetch(CONFIG.vorrundeCsv + bust, {cache:"no-store"}),
+        fetch(CONFIG.finaleCsv + bust, {cache:"no-store"})
+      ]);
       var texts = await Promise.all(res.map(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); }));
       var V = parseCSV(texts[0]), F = parseCSV(texts[1]);
       var sched = readSchedule(V);

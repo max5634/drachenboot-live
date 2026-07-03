@@ -89,6 +89,8 @@
   .lane + .lane{border-top:1px dashed var(--line)}
   .btag{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800;flex:none}
   .b1{background:var(--b1)} .b2{background:var(--b2)}
+  .bahnpill{font-size:9.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#fff; padding:4px 8px; border-radius:6px; white-space:nowrap; flex:none}
+  .lane .lteam{font-weight:600}
   .lane .lt{margin-left:auto; font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; color:var(--slate)}
   .fc .erg{margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-size:12px; font-weight:600; color:var(--ink)}
   .fc.grand{border-color:#e7cd95; background:linear-gradient(180deg,#fffdf7,#fff)}
@@ -307,8 +309,8 @@
       else if(idx===nextIdx) st='<span class="st live"><span class="dot"></span>Als Nächstes</span>';
       else st='<span class="st next">Start '+esc(f.time)+'</span>';
       var lanes='';
-      if(f.b1) lanes+='<div class="lane"><span class="btag b1">1</span><span>'+esc(f.b1)+'</span>'+(f.t1?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
-      if(f.b2) lanes+='<div class="lane"><span class="btag b2">2</span><span>'+esc(f.b2)+'</span>'+(f.t2?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
+      if(f.b1) lanes+='<div class="lane"><span class="bahnpill b1">Bahn 1</span><span class="lteam">'+esc(f.b1)+'</span>'+(f.t1?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
+      if(f.b2) lanes+='<div class="lane"><span class="bahnpill b2">Bahn 2</span><span class="lteam">'+esc(f.b2)+'</span>'+(f.t2?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
       var erg = f.erg ? '<div class="erg">'+esc(f.erg)+'</div>' : '';
       return '<div class="fc'+(grand?" grand":"")+(idx===nextIdx?" live-c":"")+'">'+head
         + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span>'+st+'</div>'+ribbon+lanes+erg+'</div></div>';

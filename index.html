@@ -33,7 +33,7 @@
   .refresh{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(16px + env(safe-area-inset-bottom)); z-index:60;
     display:inline-flex; align-items:center; gap:9px; background:var(--teal); color:#fff; border:0;
     font-family:inherit; font-weight:800; font-size:15px; letter-spacing:.01em; padding:14px 24px;
-    border-radius:999px; cursor:pointer; box-shadow:0 10px 26px rgba(8,40,50,.4); -webkit-tap-highlight-color:transparent}
+    border-radius:999px; cursor:pointer; box-shadow:0 10px 26px rgba(8,40,50,.4); -webkit-tap-highlight-color:transparent; touch-action:manipulation}
   .refresh:active{background:var(--teal-deep); transform:translateX(-50%) scale(.97)}
   .refresh:focus-visible{outline:3px solid #fff; outline-offset:2px}
   .refresh .rico{display:inline-block; font-size:18px; line-height:1}
@@ -188,9 +188,9 @@
       </div>
       <div class="note">Live-Ergebnisse · SV Werbetal</div>
     </footer>
-    <button class="refresh" id="refreshBtn" type="button" aria-label="Neue Zeiten laden"><span class="rico">↻</span><span class="rlabel">Aktualisieren</span></button>
   </div>
 </div>
+<button class="refresh" id="refreshBtn" type="button" aria-label="Seite aktualisieren"><span class="rico">↻</span><span class="rlabel">Aktualisieren</span></button>
 
 <script>
 (function(){
@@ -398,18 +398,18 @@
   clsBtns.forEach(function(b){ b.addEventListener("click", function(){ showClass(b.dataset.cls); }); });
   try{ var _sc = localStorage.getItem("db_cls"); if(_sc==="10er"||_sc==="20er"){ curCls=_sc; clsBtns.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.cls===_sc); }); } }catch(e){}
 
-  // "Aktualisieren"-Knopf: lädt frische Zeiten, ohne die Seite neu zu laden
+  // "Aktualisieren"-Knopf: echter kompletter Seiten-Refresh.
+  // Der zuletzt geöffnete Reiter wird danach automatisch wiederhergestellt.
   var rbtn = document.getElementById("refreshBtn");
-  if(rbtn) rbtn.addEventListener("click", function(){
-    var lbl = rbtn.querySelector(".rlabel");
-    rbtn.classList.add("spin");
-    Promise.resolve(load()).finally(function(){
-      setTimeout(function(){
-        rbtn.classList.remove("spin");
-        if(lbl){ lbl.textContent = "Aktualisiert"; setTimeout(function(){ lbl.textContent = "Aktualisieren"; }, 1600); }
-      }, 400);
-    });
-  });
+  if(rbtn){
+    var doReload = function(){
+      rbtn.classList.add("spin");
+      var lbl = rbtn.querySelector(".rlabel"); if(lbl) lbl.textContent = "Lädt …";
+      setTimeout(function(){ location.reload(); }, 120);
+    };
+    rbtn.addEventListener("click", doReload);
+    rbtn.addEventListener("touchend", function(e){ e.preventDefault(); doReload(); });
+  }
 
   load();
   setInterval(load, CONFIG.refreshMs);

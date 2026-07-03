@@ -104,7 +104,7 @@
   .zcard .znum{width:26px; height:26px; border-radius:8px; background:#eef3f4; color:var(--slate); font-weight:800; font-size:13px; display:grid; place-items:center; font-variant-numeric:tabular-nums; flex:none}
   .zcard .ztime{font-family:var(--mono); font-weight:700; font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums}
   .zcard .zhead .chip{margin-left:auto}
-  .zteam{display:grid; grid-template-columns:24px 1fr auto; align-items:center; gap:11px; padding:6px 0}
+  .zteam{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:11px; padding:6px 0}
   .zteam + .zteam{border-top:1px dashed var(--line)}
   .zteam .btag{width:24px; height:24px; border-radius:7px; font-size:11px}
   .zteam .znm{font-size:14px; line-height:1.2; font-weight:500}
@@ -322,7 +322,7 @@
     if(!DATA.sched.length){ $("zeitList").innerHTML='<div class="muted">Zeitplan wird geladen …</div>'; return; }
     var boat=function(b,team,t){
       var open = t ? "" : " open";
-      return '<div class="zteam"><span class="btag b'+b+'">'+b+'</span><span class="znm">'+esc(team)+'</span>'
+      return '<div class="zteam"><span class="bahnpill b'+b+'">Bahn '+b+'</span><span class="znm">'+esc(team)+'</span>'
         + '<span class="zt'+open+'">'+(t?esc(t):"–")+'</span></div>';
     };
     $("zeitList").innerHTML = DATA.sched.map(function(r){

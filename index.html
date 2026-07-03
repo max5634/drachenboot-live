@@ -30,10 +30,13 @@
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(55,198,214,.65)}70%{box-shadow:0 0 0 8px rgba(55,198,214,0)}100%{box-shadow:0 0 0 0 rgba(55,198,214,0)}}
   .upd{font-size:10.5px; color:#9fc0c7; letter-spacing:.02em}
   .livebar{display:flex; align-items:center; gap:9px; margin-top:12px; flex-wrap:wrap}
-  .refresh{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.13); border:1px solid rgba(157,230,238,.45); color:#eafafd; font-family:inherit; font-weight:700; font-size:12px; padding:7px 13px; border-radius:999px; cursor:pointer; -webkit-tap-highlight-color:transparent}
-  .refresh:active{background:rgba(255,255,255,.26)}
-  .refresh:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
-  .refresh .rico{display:inline-block; font-size:15px; line-height:1}
+  .refresh{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(16px + env(safe-area-inset-bottom)); z-index:60;
+    display:inline-flex; align-items:center; gap:9px; background:var(--teal); color:#fff; border:0;
+    font-family:inherit; font-weight:800; font-size:15px; letter-spacing:.01em; padding:14px 24px;
+    border-radius:999px; cursor:pointer; box-shadow:0 10px 26px rgba(8,40,50,.4); -webkit-tap-highlight-color:transparent}
+  .refresh:active{background:var(--teal-deep); transform:translateX(-50%) scale(.97)}
+  .refresh:focus-visible{outline:3px solid #fff; outline-offset:2px}
+  .refresh .rico{display:inline-block; font-size:18px; line-height:1}
   .refresh.spin .rico{animation:rspin .7s linear infinite}
   @keyframes rspin{to{transform:rotate(360deg)}}
   .wave{position:absolute; left:0; right:0; bottom:-1px; width:100%; height:26px; display:block; z-index:2}
@@ -106,7 +109,7 @@
   .zteam .zt{font-family:var(--mono); font-size:13px; color:var(--slate); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
   .zteam .zt.open{color:#b7c4c8}
 
-  .ft{padding:22px 16px 30px; border-top:1px solid var(--line); background:#e8f1f1}
+  .ft{padding:22px 16px 88px; border-top:1px solid var(--line); background:#e8f1f1}
   .ft .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--slate); font-weight:700; text-align:center; margin-bottom:10px}
   .host{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:18px}
   .host .h{background:var(--navy); color:#eaf5f6; font-weight:700; font-size:12px; padding:7px 13px; border-radius:9px}
@@ -137,7 +140,7 @@
           <div class="eyebrow">Nordhessische Meisterschaften</div>
           <div class="wordmark">Drachenboot</div>
           <div class="place">Nieder-Werbe am Edersee · 11. Juli</div>
-          <div class="livebar"><span class="live"><span class="dot"></span>LIVE</span><span class="upd" id="upd">lädt …</span><button class="refresh" id="refreshBtn" type="button" aria-label="Neue Zeiten laden"><span class="rico">↻</span>Aktualisieren</button></div>
+          <div class="livebar"><span class="live"><span class="dot"></span>LIVE</span><span class="upd" id="upd">lädt …</span></div>
         </div>
       </div>
       <svg class="wave" viewBox="0 0 440 40" preserveAspectRatio="none" aria-hidden="true">
@@ -185,6 +188,7 @@
       </div>
       <div class="note">Live-Ergebnisse · SV Werbetal</div>
     </footer>
+    <button class="refresh" id="refreshBtn" type="button" aria-label="Neue Zeiten laden"><span class="rico">↻</span><span class="rlabel">Aktualisieren</span></button>
   </div>
 </div>
 
@@ -397,8 +401,14 @@
   // "Aktualisieren"-Knopf: lädt frische Zeiten, ohne die Seite neu zu laden
   var rbtn = document.getElementById("refreshBtn");
   if(rbtn) rbtn.addEventListener("click", function(){
+    var lbl = rbtn.querySelector(".rlabel");
     rbtn.classList.add("spin");
-    Promise.resolve(load()).finally(function(){ setTimeout(function(){ rbtn.classList.remove("spin"); }, 500); });
+    Promise.resolve(load()).finally(function(){
+      setTimeout(function(){
+        rbtn.classList.remove("spin");
+        if(lbl){ lbl.textContent = "Aktualisiert"; setTimeout(function(){ lbl.textContent = "Aktualisieren"; }, 1600); }
+      }, 400);
+    });
   });
 
   load();

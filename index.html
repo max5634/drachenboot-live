@@ -69,6 +69,9 @@
   .nm{font-weight:650; font-size:14.5px; line-height:1.18}
   .splits{margin-top:3px; font-family:var(--mono); font-size:11px; color:var(--slate); font-variant-numeric:tabular-nums}
   .tot{font-family:var(--mono); font-weight:700; font-size:17px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+  .rw.un{background:#f5f9f9}
+  .rk.none{background:#eef3f4; color:#aebbc0; font-weight:700}
+  .waiting{font-size:11px; font-weight:600; color:#9fb0b6; white-space:nowrap; text-align:right}
 
   .chip{display:inline-flex; align-items:center; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:3px 7px; border-radius:6px}
   .c20{background:#0b5a63; color:#d5f2f5} .c10{background:#dcf0f2; color:#0b5a63}
@@ -152,14 +155,14 @@
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Ansicht">
-      <button class="tab" role="tab" aria-selected="true" data-tab="rang">Rangliste</button>
+      <button class="tab" role="tab" aria-selected="true" data-tab="zeit">Zeitplan</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="fin">Finale</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="zeit">Zeitplan</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="rang">Rangliste</button>
     </nav>
 
     <div class="banner" id="banner"></div>
 
-    <section class="panel" id="p-rang" role="tabpanel">
+    <section class="panel" id="p-rang" role="tabpanel" hidden>
       <div class="seg" id="clsSeg">
         <button data-cls="20er" aria-selected="true">20er <span class="n" id="n20">·</span></button>
         <button data-cls="10er" aria-selected="false">10er <span class="n" id="n10">·</span></button>
@@ -173,7 +176,7 @@
       <div class="fin" id="finList"></div>
     </section>
 
-    <section class="panel" id="p-zeit" role="tabpanel" hidden>
+    <section class="panel" id="p-zeit" role="tabpanel">
       <p class="zh">Vorrunde · 09:30 bis 14:15 Uhr · 15-Minuten-Takt. Jedes Boot fährt zweimal, je einmal auf Bahn 1 und Bahn 2.</p>
       <div id="zeitList"></div>
     </section>
@@ -262,17 +265,28 @@
   // ---- Renderer ----
   function renderRang(){
     if(!DATA) return;
-    var arr = curCls==="20er" ? DATA.s20 : DATA.s10;
-    $("rangTitle").textContent = curCls + " · Gesamtwertung";
-    if(!arr.length){ $("rangList").innerHTML = '<div class="muted">Noch keine gewerteten Boote. Sobald ein Boot beide Läufe hat, erscheint es hier.</div>'; return; }
-    $("rangList").innerHTML = arr.map(function(o,idx){
-      var pos = idx+1, g = pos<=3 ? " g"+pos : "";
-      var splits = (o.l1||o.l2) ? (esc(o.l1)+" + "+esc(o.l2)) : "";
-      return '<div class="rw'+(pos===1?" lead":"")+'">'
-        + '<div class="rk'+g+'">'+pos+'</div>'
+    var cls = curCls;
+    $("rangTitle").textContent = cls + " · Gesamtwertung";
+    var ranked = cls==="20er" ? DATA.s20 : DATA.s10;
+    // Alle Mannschaften der Klasse aus dem Zeitplan sammeln
+    var seen={}, all=[];
+    DATA.sched.forEach(function(r){ if(r.cls===cls){ [r.b1,r.b2].forEach(function(n){ if(n && !seen[n]){ seen[n]=1; all.push(n); } }); } });
+    if(!all.length){ $("rangList").innerHTML='<div class="muted">Wird geladen …</div>'; return; }
+    var inRank={}; ranked.forEach(function(o){ inRank[o.name]=1; });
+    var offen = all.filter(function(n){ return !inRank[n]; }).sort(function(a,b){ return a.localeCompare(b,'de'); });
+    var html = ranked.map(function(o,idx){
+      var pos=idx+1, g=pos<=3?" g"+pos:"";
+      var splits=(o.l1||o.l2)?(esc(o.l1)+" + "+esc(o.l2)):"";
+      return '<div class="rw'+(pos===1?" lead":"")+'"><div class="rk'+g+'">'+pos+'</div>'
         + '<div><div class="nm">'+esc(o.name)+'</div>'+(splits?'<div class="splits">'+splits+'</div>':'')+'</div>'
         + '<div class="tot">'+esc(o.total)+'</div></div>';
     }).join("");
+    html += offen.map(function(n){
+      return '<div class="rw un"><div class="rk none">–</div>'
+        + '<div><div class="nm">'+esc(n)+'</div></div>'
+        + '<div class="waiting">noch kein Platz</div></div>';
+    }).join("");
+    $("rangList").innerHTML = html;
   }
 
   function renderFin(){

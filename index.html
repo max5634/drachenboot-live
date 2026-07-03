@@ -271,28 +271,42 @@
 
   function renderFin(){
     if(!DATA) return;
-    if(!DATA.fin.length){ $("finList").innerHTML='<div class="muted">Die Finalläufe erscheinen sobald die Vorrunde läuft.</div>'; return; }
-    var now = nowHM();
-    $("finList").innerHTML = DATA.fin.map(function(f){
+    if(!DATA.fin.length){ $("finList").innerHTML='<div class="muted">Die Finalläufe erscheinen sobald die Vorrunde gefahren ist.</div>'; return; }
+    // Eine Klasse zeigt ihre Finalpaarungen erst, wenn ALLE ihre Boote gewertet sind
+    var complete = {
+      "10er": DATA.n10 > 0 && DATA.s10.length >= DATA.n10,
+      "20er": DATA.n20 > 0 && DATA.s20.length >= DATA.n20
+    };
+    // Nächsten noch zu fahrenden Finallauf finden (nur in fertig gewerteten Klassen)
+    var nextIdx = -1;
+    for(var i=0;i<DATA.fin.length;i++){
+      var g=DATA.fin[i]; if(!complete[g.cls]) continue;
+      var gs=/Alleinfahrt/.test(g.um); var gd=gs?!!g.t1:(!!g.t1&&!!g.t2);
+      if(!gd){ nextIdx=i; break; }
+    }
+    $("finList").innerHTML = DATA.fin.map(function(f, idx){
       var grand = /Großes Finale|★/.test(f.um);
       var label = f.um.replace(/\s*★.*$/,"").replace(/\s*Großes Finale.*$/,"").trim();
       var chip = '<span class="chip '+(f.cls==="20er"?"c20":"c10")+'">'+esc(f.cls)+'</span>';
-      var start = toMin(f.time);
-      var isSolo = !!f.b1 && !f.b2;
+      var ribbon = grand ? '<div style="margin-bottom:8px"><span class="ribbon">★ Großes Finale</span></div>' : '';
+      var head = '<div class="tcol"><span class="t">'+esc(f.time)+'</span><span class="no">'+esc(f.lauf)+'</span></div>';
+      if(!complete[f.cls]){
+        return '<div class="fc'+(grand?" grand":"")+'">'+head
+          + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span>'
+          + '<span class="st next">Start '+esc(f.time)+'</span></div>'+ribbon
+          + '<div class="lane" style="color:#8aa0a7">Boote stehen nach der Vorrunde fest</div></div></div>';
+      }
+      var isSolo = /Alleinfahrt/.test(f.um);
       var done = isSolo ? !!f.t1 : (!!f.t1 && !!f.t2);
-      var live = !done && start!=null && now>=start;
       var st;
       if(done) st='<span class="st done">Fertig</span>';
-      else if(live) st='<span class="st live"><span class="dot"></span>Läuft</span>';
+      else if(idx===nextIdx) st='<span class="st live"><span class="dot"></span>Als Nächstes</span>';
       else st='<span class="st next">Start '+esc(f.time)+'</span>';
       var lanes='';
       if(f.b1) lanes+='<div class="lane"><span class="btag b1">1</span><span>'+esc(f.b1)+'</span>'+(f.t1?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
       if(f.b2) lanes+='<div class="lane"><span class="btag b2">2</span><span>'+esc(f.b2)+'</span>'+(f.t2?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
-      if(!f.b1 && !f.b2) lanes='<div class="lane" style="color:#8aa0a7">Boote stehen nach der Vorrunde fest</div>';
-      var ribbon = grand ? '<div style="margin-bottom:8px"><span class="ribbon">★ Großes Finale</span></div>' : '';
       var erg = f.erg ? '<div class="erg">'+esc(f.erg)+'</div>' : '';
-      return '<div class="fc'+(grand?" grand":"")+(live?" live-c":"")+'">'
-        + '<div class="tcol"><span class="t">'+esc(f.time)+'</span><span class="no">'+esc(f.lauf)+'</span></div>'
+      return '<div class="fc'+(grand?" grand":"")+(idx===nextIdx?" live-c":"")+'">'+head
         + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span>'+st+'</div>'+ribbon+lanes+erg+'</div></div>';
     }).join("");
   }

@@ -113,6 +113,9 @@
   .zteam .znm{font-size:14px; line-height:1.2; font-weight:500}
   .zteam .zt{font-family:var(--mono); font-size:13px; color:var(--slate); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
   .zteam .zt.open{color:#b7c4c8}
+  .zteam.out .znm{text-decoration:line-through; color:#a6b4b9; font-weight:500}
+  .zteam.out .bahnpill{opacity:.45}
+  .zteam .outtag{margin-left:auto; font-size:10.5px; font-weight:800; letter-spacing:.04em; color:#b46a6a; text-transform:uppercase; white-space:nowrap}
 
   .ft{padding:22px 16px 88px; border-top:1px solid var(--line); background:#e8f1f1}
   .ft .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--slate); font-weight:700; text-align:center; margin-bottom:10px}
@@ -228,6 +231,17 @@
   }
   function cell(g,r,c){ return (g[r]&&g[r][c]!=null) ? String(g[r][c]).trim() : ""; }
 
+  // Abhakliste (Vorrunde, Spalten D/E ab Zeile 32) -> Set ausgefallener Teams
+  function isAusfallFlag(s){ s=(s||"").trim().toUpperCase(); return s==="TRUE"||s==="X"||s==="JA"||s==="✓"; }
+  function readAusfall(V){
+    var set={};
+    for(var r=31;r<=60;r++){
+      var name=cell(V,r,3); if(!name) continue;
+      if(isAusfallFlag(cell(V,r,4))) set[name]=1;
+    }
+    return set;
+  }
+
   function readStandings(V, start, count){
     var out=[];
     for(var i=0;i<count;i++){
@@ -254,8 +268,11 @@
     }
     return out;
   }
-  function countBoats(sched, cls){
-    var s={}; sched.forEach(function(r){ if(r.cls===cls){ if(r.b1)s[r.b1]=1; if(r.b2)s[r.b2]=1; } });
+  function countBoats(sched, cls, aus){
+    var s={}; sched.forEach(function(r){ if(r.cls===cls){
+      if(r.b1 && !(aus&&aus[r.b1])) s[r.b1]=1;
+      if(r.b2 && !(aus&&aus[r.b2])) s[r.b2]=1;
+    } });
     return Object.keys(s).length;
   }
 
@@ -270,7 +287,7 @@
     var ranked = cls==="20er" ? DATA.s20 : DATA.s10;
     // Alle Mannschaften der Klasse aus dem Zeitplan sammeln
     var seen={}, all=[];
-    DATA.sched.forEach(function(r){ if(r.cls===cls){ [r.b1,r.b2].forEach(function(n){ if(n && !seen[n]){ seen[n]=1; all.push(n); } }); } });
+    DATA.sched.forEach(function(r){ if(r.cls===cls){ [r.b1,r.b2].forEach(function(n){ if(n && !seen[n] && !(DATA.aus&&DATA.aus[n])){ seen[n]=1; all.push(n); } }); } });
     if(!all.length){ $("rangList").innerHTML='<div class="muted">Wird geladen …</div>'; return; }
     var inRank={}; ranked.forEach(function(o){ inRank[o.name]=1; });
     var offen = all.filter(function(n){ return !inRank[n]; }).sort(function(a,b){ return a.localeCompare(b,'de'); });
@@ -301,7 +318,8 @@
     var nextIdx = -1;
     for(var i=0;i<DATA.fin.length;i++){
       var g=DATA.fin[i]; if(!complete[g.cls]) continue;
-      var gs=/Alleinfahrt/.test(g.um); var gd=gs?!!g.t1:(!!g.t1&&!!g.t2);
+      if(!g.b1 && !g.b2) continue;   // Lauf entfaellt (Boot ausgefallen)
+      var gs=!g.b2; var gd=gs?!!g.t1:(!!g.t1&&!!g.t2);
       if(!gd){ nextIdx=i; break; }
     }
     $("finList").innerHTML = DATA.fin.map(function(f, idx){
@@ -316,7 +334,8 @@
           + '<span class="st next">Start '+esc(f.time)+'</span></div>'+ribbon
           + '<div class="lane" style="color:#8aa0a7">Boote stehen nach der Vorrunde fest</div></div></div>';
       }
-      var isSolo = /Alleinfahrt/.test(f.um);
+      if(!f.b1 && !f.b2) return '';   // Lauf entfaellt (zu wenige Boote)
+      var isSolo = !f.b2;             // nur ein Boot am Start -> Alleinfahrt
       var done = isSolo ? !!f.t1 : (!!f.t1 && !!f.t2);
       var st;
       if(done) st='<span class="st done">Fertig</span>';
@@ -334,7 +353,9 @@
   function renderZeit(){
     if(!DATA) return;
     if(!DATA.sched.length){ $("zeitList").innerHTML='<div class="muted">Zeitplan wird geladen …</div>'; return; }
+    var aus = DATA.aus || {};
     var boat=function(b,team,t){
+      if(aus[team]) return '<div class="zteam out"><span class="bahnpill b'+b+'">Bahn '+b+'</span><span class="znm">'+esc(team)+'</span><span class="outtag">ausgefallen</span></div>';
       var open = t ? "" : " open";
       return '<div class="zteam"><span class="bahnpill b'+b+'">Bahn '+b+'</span><span class="znm">'+esc(team)+'</span>'
         + '<span class="zt'+open+'">'+(t?esc(t):"–")+'</span></div>';
@@ -374,6 +395,7 @@
       var texts = await Promise.all(res.map(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.text(); }));
       var V = parseCSV(texts[0]), F = parseCSV(texts[1]);
       var sched = readSchedule(V);
+      var aus = readAusfall(V);
       var standRaw = cell(V,1,8); // "Stand: HH:MM:SS"
       var sm = /(\d{2}:\d{2}:\d{2})/.exec(standRaw||"");
       var standTime = sm ? sm[1] : "";
@@ -384,9 +406,10 @@
         s20: readStandings(V, 5, 6),
         s10: readStandings(V, 14, 14),
         sched: sched,
+        aus: aus,
         fin: readFinals(F),
-        n20: countBoats(sched,"20er"),
-        n10: countBoats(sched,"10er"),
+        n20: countBoats(sched,"20er",aus),
+        n10: countBoats(sched,"10er",aus),
         stand: standRaw ? standRaw.replace(/^Stand:\s*/,"Aktualisiert ").replace(/(:\d{2})$/,"") : ""
       };
       banner(null);

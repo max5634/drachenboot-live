@@ -207,7 +207,7 @@
   };
   // ===================================================================================
 
-  var DATA = null, curCls = "20er";
+  var DATA = null, curCls = "20er", lastStand = "";
 
   var esc = function(s){ return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); };
   var $ = function(id){ return document.getElementById(id); };
@@ -375,6 +375,11 @@
       var V = parseCSV(texts[0]), F = parseCSV(texts[1]);
       var sched = readSchedule(V);
       var standRaw = cell(V,1,8); // "Stand: HH:MM:SS"
+      var sm = /(\d{2}:\d{2}:\d{2})/.exec(standRaw||"");
+      var standTime = sm ? sm[1] : "";
+      // Schutz gegen veraltete Google-Cache-Versionen: nie auf einen aelteren Stand zurueckfallen
+      if(standTime && lastStand && standTime < lastStand){ banner(null); return; }
+      if(standTime) lastStand = standTime;
       DATA = {
         s20: readStandings(V, 5, 6),
         s10: readStandings(V, 14, 14),

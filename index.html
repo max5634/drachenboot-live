@@ -81,7 +81,6 @@
   .fc .tcol{background:#f4f8f8; border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:10px 4px}
   .fc .tcol .t{font-family:var(--mono); font-weight:700; font-size:13px; color:var(--ink)}
   .fc .tcol .no{font-size:9px; letter-spacing:.08em; color:var(--slate); text-transform:uppercase}
-  .fc .tcol .no.big{font-size:11px; font-weight:800; color:var(--ink); letter-spacing:.03em; line-height:1.25}
   .fc .body{padding:11px 13px}
   .fc .top{display:flex; align-items:center; gap:8px; margin-bottom:9px; flex-wrap:wrap}
   .fc .ttl{font-weight:750; font-size:13px}
@@ -106,7 +105,7 @@
   .zcard{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:10px 13px; margin-bottom:8px}
   .zcard .zhead{display:flex; align-items:center; gap:9px; padding-bottom:9px; margin-bottom:6px; border-bottom:1px solid var(--line)}
   .zcard .znum{width:26px; height:26px; border-radius:8px; background:#eef3f4; color:var(--slate); font-weight:800; font-size:13px; display:grid; place-items:center; font-variant-numeric:tabular-nums; flex:none}
-  .zcard .zlabel{font-size:12.5px; font-weight:600; color:var(--slate); letter-spacing:.01em}
+  .zcard .ztime{font-family:var(--mono); font-weight:700; font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums}
   .zcard .zhead .chip{margin-left:auto}
   .zteam{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:11px; padding:6px 0}
   .zteam + .zteam{border-top:1px dashed var(--line)}
@@ -146,7 +145,7 @@
           <div class="eyebrow">Nordhessische Meisterschaften</div>
           <div class="wordmark">Drachenboot</div>
           <div class="place">Nieder-Werbe am Edersee · 11. Juli</div>
-          <div class="livebar"><span class="live"><span class="dot"></span>LIVE</span><span class="upd" id="upd">lädt …</span></div>
+          <div class="livebar"><span class="upd" id="upd">lädt …</span></div>
         </div>
       </div>
       <svg class="wave" viewBox="0 0 440 40" preserveAspectRatio="none" aria-hidden="true">
@@ -173,12 +172,12 @@
     </section>
 
     <section class="panel" id="p-fin" role="tabpanel" hidden>
-      <div class="sec-h"><h2>Finalläufe</h2><span>von hinten nach vorne</span></div>
+      <div class="sec-h"><h2>Finalläufe</h2><span>ab 15:00 · von hinten nach vorne</span></div>
       <div class="fin" id="finList"></div>
     </section>
 
     <section class="panel" id="p-zeit" role="tabpanel">
-      <p class="zh">Vorrunde · jedes Boot fährt zweimal, je einmal auf Bahn 1 und Bahn 2. Reihenfolge von oben nach unten.</p>
+      <p class="zh">Vorrunde · 09:30 bis 14:15 Uhr · 15-Minuten-Takt. Jedes Boot fährt zweimal, je einmal auf Bahn 1 und Bahn 2.</p>
       <div id="zeitList"></div>
     </section>
 
@@ -260,6 +259,9 @@
     return Object.keys(s).length;
   }
 
+  function nowHM(){ var d=new Date(); return d.getHours()*60+d.getMinutes(); }
+  function toMin(hhmm){ var m=/(\d{1,2}):(\d{2})/.exec(hhmm||""); return m ? (+m[1])*60+(+m[2]) : null; }
+
   // ---- Renderer ----
   function renderRang(){
     if(!DATA) return;
@@ -307,10 +309,11 @@
       var label = f.um.replace(/\s*★.*$/,"").replace(/\s*Großes Finale.*$/,"").trim();
       var chip = '<span class="chip '+(f.cls==="20er"?"c20":"c10")+'">'+esc(f.cls)+'</span>';
       var ribbon = grand ? '<div style="margin-bottom:8px"><span class="ribbon">★ Großes Finale</span></div>' : '';
-      var head = '<div class="tcol"><span class="no big">'+esc(f.lauf)+'</span></div>';
+      var head = '<div class="tcol"><span class="t">'+esc(f.time)+'</span><span class="no">'+esc(f.lauf)+'</span></div>';
       if(!complete[f.cls]){
         return '<div class="fc'+(grand?" grand":"")+'">'+head
-          + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span></div>'+ribbon
+          + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span>'
+          + '<span class="st next">Start '+esc(f.time)+'</span></div>'+ribbon
           + '<div class="lane" style="color:#8aa0a7">Boote stehen nach der Vorrunde fest</div></div></div>';
       }
       var isSolo = /Alleinfahrt/.test(f.um);
@@ -318,7 +321,7 @@
       var st;
       if(done) st='<span class="st done">Fertig</span>';
       else if(idx===nextIdx) st='<span class="st live"><span class="dot"></span>Als Nächstes</span>';
-      else st='<span class="st next">Folgt</span>';
+      else st='<span class="st next">Start '+esc(f.time)+'</span>';
       var lanes='';
       if(f.b1) lanes+='<div class="lane"><span class="bahnpill b1">Bahn 1</span><span class="lteam">'+esc(f.b1)+'</span>'+(f.t1?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
       if(f.b2) lanes+='<div class="lane"><span class="bahnpill b2">Bahn 2</span><span class="lteam">'+esc(f.b2)+'</span>'+(f.t2?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
@@ -338,7 +341,7 @@
     };
     $("zeitList").innerHTML = DATA.sched.map(function(r){
       var chip='<span class="chip '+(r.cls==="20er"?"c20":"c10")+'">'+esc(r.cls)+'</span>';
-      return '<div class="zcard"><div class="zhead"><span class="zlabel">Rennen</span><span class="znum">'+esc(r.num)+'</span>'+chip+'</div>'
+      return '<div class="zcard"><div class="zhead"><span class="znum">'+esc(r.num)+'</span><span class="ztime">'+esc(r.time)+'</span>'+chip+'</div>'
         + boat(1,r.b1,r.t1)+boat(2,r.b2,r.t2)+'</div>';
     }).join("");
   }

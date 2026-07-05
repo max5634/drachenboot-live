@@ -61,14 +61,15 @@
 
   .list{display:flex; flex-direction:column; gap:7px}
   .rw{display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:11px; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:11px 13px}
+  .rw>div{min-width:0}
   .rw.lead{border-color:#e7cd95; box-shadow:0 6px 18px rgba(217,162,62,.15)}
   .rk{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-weight:800; font-size:14px; background:#eef3f4; color:var(--slate); font-variant-numeric:tabular-nums}
   .rk.g1{background:linear-gradient(150deg,#f0c869,#cf9126); color:#3a2a05}
   .rk.g2{background:linear-gradient(150deg,#cdd6db,#9aa8b0); color:#28323a}
   .rk.g3{background:linear-gradient(150deg,#d29b6f,#a96f45); color:#2e1c0e}
-  .nm{font-weight:650; font-size:14.5px; line-height:1.18}
+  .nm{font-weight:650; font-size:14.5px; line-height:1.18; overflow-wrap:anywhere}
   .splits{margin-top:3px; font-family:var(--mono); font-size:11px; color:var(--slate); font-variant-numeric:tabular-nums}
-  .tot{font-family:var(--mono); font-weight:700; font-size:17px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+  .tot{font-family:var(--mono); font-weight:700; font-size:17px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:-.01em; white-space:nowrap}
   .rw.un{background:#f5f9f9}
   .rk.none{background:#eef3f4; color:#aebbc0; font-weight:700}
   .waiting{font-size:11px; font-weight:600; color:#9fb0b6; white-space:nowrap; text-align:right}

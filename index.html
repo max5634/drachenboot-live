@@ -128,13 +128,15 @@
   .ft .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--slate); font-weight:700; text-align:center; margin-bottom:10px}
   .host{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:18px}
   .host .h{background:var(--navy); color:#eaf5f6; font-weight:700; font-size:12px; padding:7px 13px; border-radius:9px}
-  .sponsors{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .sponsors{display:grid; grid-template-columns:repeat(6,1fr); gap:8px}
+  .sponsors .sp-card{grid-column:span 2}
   .sp-card{background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 10px; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:54px}
   .sp-card .sn{font-weight:750; font-size:14px; color:var(--ink); letter-spacing:.01em}
   .sp-card .sd{font-size:9.5px; color:var(--slate); margin-top:3px; letter-spacing:.03em; text-transform:uppercase}
-  .splogo{max-width:92%; max-height:44px; width:auto; height:auto; object-fit:contain; display:block}
+  .splogo{max-width:92%; max-height:40px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto}
   /* Dr. Zacke = Hauptsponsor (3. Karte): volle Breite, groesser, mit Label */
-  .sponsors .sp-card:nth-child(3){grid-column:1/-1; padding:15px 10px 16px; border-color:#cfe0e2; box-shadow:0 4px 14px rgba(11,90,99,.10)}
+  .sponsors .sp-card:nth-child(3){order:-1; grid-column:1/-1; padding:15px 10px 16px; border-color:#cfe0e2; box-shadow:0 4px 14px rgba(11,90,99,.10)}
+  .sp-card .sn{font-size:13px}
   .sponsors .sp-card:nth-child(3)::before{content:"Hauptsponsor"; display:block; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal-deep); font-weight:800; margin-bottom:9px}
   .sponsors .sp-card:nth-child(3) .splogo{max-height:80px; max-width:78%; margin:0 auto}
   .ft .note{margin-top:14px; font-size:10px; color:#93a9b0; text-align:center; line-height:1.6}

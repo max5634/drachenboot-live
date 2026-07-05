@@ -133,6 +133,10 @@
   .sp-card .sn{font-weight:750; font-size:14px; color:var(--ink); letter-spacing:.01em}
   .sp-card .sd{font-size:9.5px; color:var(--slate); margin-top:3px; letter-spacing:.03em; text-transform:uppercase}
   .splogo{max-width:92%; max-height:44px; width:auto; height:auto; object-fit:contain; display:block}
+  /* Dr. Zacke = Hauptsponsor (3. Karte): volle Breite, groesser, mit Label */
+  .sponsors .sp-card:nth-child(3){grid-column:1/-1; padding:15px 10px 16px; border-color:#cfe0e2; box-shadow:0 4px 14px rgba(11,90,99,.10)}
+  .sponsors .sp-card:nth-child(3)::before{content:"Hauptsponsor"; display:block; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--teal-deep); font-weight:800; margin-bottom:9px}
+  .sponsors .sp-card:nth-child(3) .splogo{max-height:80px; max-width:78%; margin:0 auto}
   .ft .note{margin-top:14px; font-size:10px; color:#93a9b0; text-align:center; line-height:1.6}
 
   .banner{margin:0 14px 12px; padding:11px 13px; border-radius:11px; font-size:12.5px; line-height:1.5; display:none}
@@ -183,7 +187,7 @@
     </section>
 
     <section class="panel" id="p-fin" role="tabpanel" hidden>
-      <div class="sec-h"><h2>Finalläufe</h2><span>ab 15:00 · von hinten nach vorne</span></div>
+      <div class="sec-h"><h2>Finalläufe</h2><span>ab 14:15 · von hinten nach vorne</span></div>
       <div class="fin" id="finList"></div>
     </section>
 

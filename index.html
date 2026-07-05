@@ -42,7 +42,7 @@
   .wave{position:absolute; left:0; right:0; bottom:-1px; width:100%; height:26px; display:block; z-index:2}
 
   .tabs{position:sticky; top:0; z-index:20; display:flex; gap:4px; padding:8px; background:var(--foam); border-bottom:1px solid var(--line)}
-  .tab{flex:1; border:0; background:transparent; font-family:inherit; font-weight:650; font-size:13px; color:var(--slate); padding:9px 6px; border-radius:9px; cursor:pointer; letter-spacing:.01em}
+  .tab{flex:1; border:0; background:transparent; font-family:inherit; font-weight:650; font-size:12px; color:var(--slate); padding:9px 4px; border-radius:9px; cursor:pointer; letter-spacing:.005em; white-space:nowrap}
   .tab[aria-selected="true"]{background:var(--teal); color:#fff; box-shadow:0 4px 12px rgba(15,124,134,.32)}
   .tab:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
 
@@ -75,6 +75,10 @@
   .waiting{font-size:11px; font-weight:600; color:#9fb0b6; white-space:nowrap; text-align:right}
   .rw.prov{background:#f7fbfb}
   .tot.provtot{color:#9fb0b6; font-weight:600}
+  .locked{text-align:center; padding:44px 26px 60px; color:var(--slate)}
+  .locked .lockicon{font-size:46px; line-height:1; margin-bottom:14px}
+  .locked .locktxt{font-size:15px; font-weight:600; line-height:1.55; max-width:290px; margin:0 auto; color:var(--ink)}
+  .locked .locksub{font-size:12.5px; margin-top:8px; color:var(--slate)}
 
   .chip{display:inline-flex; align-items:center; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:3px 7px; border-radius:6px}
   .c20{background:#0b5a63; color:#d5f2f5} .c10{background:#dcf0f2; color:#0b5a63}
@@ -164,6 +168,7 @@
       <button class="tab" role="tab" aria-selected="true" data-tab="zeit">Zeitplan</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="fin">Finale</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="rang">Rangliste</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="end">Endergebnis</button>
     </nav>
 
     <div class="banner" id="banner"></div>
@@ -180,6 +185,11 @@
     <section class="panel" id="p-fin" role="tabpanel" hidden>
       <div class="sec-h"><h2>Finalläufe</h2><span>ab 15:00 · von hinten nach vorne</span></div>
       <div class="fin" id="finList"></div>
+    </section>
+
+    <section class="panel" id="p-end" role="tabpanel" hidden>
+      <div class="sec-h"><h2>Endergebnis</h2><span>nach den Finalläufen</span></div>
+      <div id="endList"></div>
     </section>
 
     <section class="panel" id="p-zeit" role="tabpanel">
@@ -373,11 +383,57 @@
     }).join("");
   }
 
+  function parseT(s){ s=(s||"").trim(); if(!s) return null; s=s.replace(",","."); var mn=0,r=s; if(s.indexOf(":")>=0){ var p=s.split(":"); mn=parseInt(p[0],10)||0; r=p[1]; } var val=parseFloat(r); return isNaN(val)?null:mn*60+val; }
+  // Endplatzierung aus den Finaldaten: je Paarung belegt die schnellere Zeit den besseren Platz (nicht klassenweit)
+  function computeEndPlatz(fins){
+    var res={ "10er":{}, "20er":{} };
+    (fins||[]).forEach(function(f){
+      var pair=/Platz\s+(\d+)\s*&\s*(\d+)/.exec(f.um||"");
+      var solo=/Platz\s+(\d+)/.exec(f.um||"");
+      if(pair){
+        var hi=+pair[1], lo=+pair[2], t1=parseT(f.t1), t2=parseT(f.t2);
+        if(f.b1 && f.b2 && t1!=null && t2!=null){
+          if(t1<=t2){ res[f.cls][hi]={team:f.b1,zeit:f.t1}; res[f.cls][lo]={team:f.b2,zeit:f.t2}; }
+          else { res[f.cls][hi]={team:f.b2,zeit:f.t2}; res[f.cls][lo]={team:f.b1,zeit:f.t1}; }
+        } else if(f.b1 && !f.b2 && t1!=null){ res[f.cls][hi]={team:f.b1,zeit:f.t1}; }
+      } else if(solo){
+        var p=+solo[1];
+        if(f.b1 && f.t1) res[f.cls][p]={team:f.b1,zeit:f.t1};
+      }
+    });
+    return res;
+  }
+  function renderEnd(){
+    if(!DATA) return;
+    if(!DATA.finalsReleased){
+      $("endList").innerHTML='<div class="locked"><div class="lockicon">🏁</div>'
+        +'<div class="locktxt">Das Endergebnis wird nach der Siegerehrung hier freigeschaltet.</div>'
+        +'<div class="locksub">Noch etwas Geduld.</div></div>';
+      return;
+    }
+    var pz=computeEndPlatz(DATA.fin), html="";
+    [["20er",DATA.n20],["10er",DATA.n10]].forEach(function(c){
+      var cls=c[0], n=c[1]; if(!n) return;
+      html+='<div class="sec-h" style="margin-top:16px"><h2>'+cls+' · Endplatzierung</h2></div><div class="list">';
+      for(var p=1;p<=n;p++){
+        var e=pz[cls][p], g=p<=3?" g"+p:"";
+        if(e){
+          html+='<div class="rw'+(p===1?" lead":"")+'"><div class="rk'+g+'">'+p+'</div>'
+            +'<div><div class="nm">'+esc(e.team)+'</div></div><div class="tot">'+esc(e.zeit)+'</div></div>';
+        } else {
+          html+='<div class="rw un"><div class="rk none">'+p+'</div><div><div class="nm" style="color:#9fb0b6">steht noch aus</div></div><div class="waiting"></div></div>';
+        }
+      }
+      html+='</div>';
+    });
+    $("endList").innerHTML = html || '<div class="muted">Noch keine Finalergebnisse.</div>';
+  }
+
   function renderAll(){
     $("n20").textContent = "· "+DATA.n20+" Boote";
     $("n10").textContent = "· "+DATA.n10+" Boote";
     $("upd").textContent = DATA.stand || "aktualisiert";
-    renderRang(); renderFin(); renderZeit();
+    renderRang(); renderFin(); renderZeit(); renderEnd();
   }
 
   function banner(kind, msg){
@@ -414,6 +470,7 @@
         sched: sched,
         aus: aus,
         fin: readFinals(F),
+        finalsReleased: isAusfallFlag(cell(F,1,8)),
         n20: countBoats(sched,"20er",aus),
         n10: countBoats(sched,"10er",aus),
         stand: standRaw ? standRaw.replace(/^Stand:\s*/,"Aktualisiert ").replace(/(:\d{2})$/,"") : ""
@@ -428,7 +485,7 @@
 
   // Tabs (merkt sich den zuletzt geöffneten Reiter)
   var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-  var panels = {rang:"p-rang", fin:"p-fin", zeit:"p-zeit"};
+  var panels = {rang:"p-rang", fin:"p-fin", zeit:"p-zeit", end:"p-end"};
   function showTab(name){
     if(!panels[name]) name = "rang";
     tabs.forEach(function(x){ x.setAttribute("aria-selected", x.dataset.tab===name); });

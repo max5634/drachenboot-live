@@ -72,6 +72,8 @@
   .rw.un{background:#f5f9f9}
   .rk.none{background:#eef3f4; color:#aebbc0; font-weight:700}
   .waiting{font-size:11px; font-weight:600; color:#9fb0b6; white-space:nowrap; text-align:right}
+  .rw.prov{background:#f7fbfb}
+  .tot.provtot{color:#9fb0b6; font-weight:600}
 
   .chip{display:inline-flex; align-items:center; font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:3px 7px; border-radius:6px}
   .c20{background:#0b5a63; color:#d5f2f5} .c10{background:#dcf0f2; color:#0b5a63}
@@ -292,11 +294,13 @@
     var inRank={}; ranked.forEach(function(o){ inRank[o.name]=1; });
     var offen = all.filter(function(n){ return !inRank[n]; }).sort(function(a,b){ return a.localeCompare(b,'de'); });
     var html = ranked.map(function(o,idx){
-      var pos=idx+1, g=pos<=3?" g"+pos:"";
-      var splits=(o.l1||o.l2)?(esc(o.l1)+" + "+esc(o.l2)):"";
-      return '<div class="rw'+(pos===1?" lead":"")+'"><div class="rk'+g+'">'+pos+'</div>'
-        + '<div><div class="nm">'+esc(o.name)+'</div>'+(splits?'<div class="splits">'+splits+'</div>':'')+'</div>'
-        + '<div class="tot">'+esc(o.total)+'</div></div>';
+      var pos=idx+1;
+      var oneRun = !o.l2;                         // nur ein Lauf -> vorlaeufig
+      var g = (!oneRun && pos<=3) ? " g"+pos : "";
+      var splits = oneRun ? "erst 1 von 2 Läufen" : (esc(o.l1)+" + "+esc(o.l2));
+      return '<div class="rw'+((!oneRun&&pos===1)?" lead":"")+(oneRun?" prov":"")+'"><div class="rk'+g+'">'+pos+'</div>'
+        + '<div><div class="nm">'+esc(o.name)+'</div><div class="splits">'+splits+'</div></div>'
+        + '<div class="tot'+(oneRun?" provtot":"")+'">'+esc(o.total)+'</div></div>';
     }).join("");
     html += offen.map(function(n){
       return '<div class="rw un"><div class="rk none">–</div>'
@@ -310,9 +314,10 @@
     if(!DATA) return;
     if(!DATA.fin.length){ $("finList").innerHTML='<div class="muted">Die Finalläufe erscheinen sobald die Vorrunde gefahren ist.</div>'; return; }
     // Eine Klasse zeigt ihre Finalpaarungen erst, wenn ALLE ihre Boote gewertet sind
+    var full = function(arr){ var c=0; arr.forEach(function(o){ if(o.l1 && o.l2) c++; }); return c; };
     var complete = {
-      "10er": DATA.n10 > 0 && DATA.s10.length >= DATA.n10,
-      "20er": DATA.n20 > 0 && DATA.s20.length >= DATA.n20
+      "10er": DATA.n10 > 0 && full(DATA.s10) >= DATA.n10,
+      "20er": DATA.n20 > 0 && full(DATA.s20) >= DATA.n20
     };
     // Nächsten noch zu fahrenden Finallauf finden (nur in fertig gewerteten Klassen)
     var nextIdx = -1;

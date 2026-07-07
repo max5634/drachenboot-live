@@ -362,10 +362,12 @@
       if(done) st='<span class="st done">Fertig</span>';
       else if(idx===nextIdx) st='<span class="st live"><span class="dot"></span>Als Nächstes</span>';
       else st='<span class="st next">Start '+esc(f.time)+'</span>';
+      var rel = DATA.finalsReleased;   // Zeiten und Platz erst nach Freigabe zeigen (wie beim Endergebnis)
       var lanes='';
-      if(f.b1) lanes+='<div class="lane"><span class="bahnpill b1">Bahn 1</span><span class="lteam">'+esc(f.b1)+'</span>'+(f.t1?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
-      if(f.b2) lanes+='<div class="lane"><span class="bahnpill b2">Bahn 2</span><span class="lteam">'+esc(f.b2)+'</span>'+(f.t2?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
-      var erg = f.erg ? '<div class="erg">'+esc(f.erg)+'</div>' : '';
+      if(f.b1) lanes+='<div class="lane"><span class="bahnpill b1">Bahn 1</span><span class="lteam">'+esc(f.b1)+'</span>'+((rel&&f.t1)?'<span class="lt">'+esc(f.t1)+'</span>':'')+'</div>';
+      if(f.b2) lanes+='<div class="lane"><span class="bahnpill b2">Bahn 2</span><span class="lteam">'+esc(f.b2)+'</span>'+((rel&&f.t2)?'<span class="lt">'+esc(f.t2)+'</span>':'')+'</div>';
+      var erg = rel ? (f.erg ? '<div class="erg">'+esc(f.erg)+'</div>' : '')
+                    : (done ? '<div class="erg" style="color:#9fb0b6;font-weight:600">Ergebnis nach der Siegerehrung</div>' : '');
       return '<div class="fc'+(grand?" grand":"")+(idx===nextIdx?" live-c":"")+'">'+head
         + '<div class="body"><div class="top">'+chip+'<span class="ttl">'+esc(label)+'</span>'+st+'</div>'+ribbon+lanes+erg+'</div></div>';
     }).join("");
